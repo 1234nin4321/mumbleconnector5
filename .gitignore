@@ -1,0 +1,23 @@
+# Composer dependencies
+vendor/
+composer.lock
+
+# Node.js dependencies
+node_modules/
+package-lock.json
+
+# Mumble Bridge Secrets
+mumble-bridge/mumble-bridge.key
+
+# Laravel/SeAT specific (if any end up here)
+.env
+storage/*.key
+storage/logs/*.log
+
+# IDEs
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db

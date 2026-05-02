@@ -1,0 +1,38 @@
+{
+    "name": "seat-plugins/mumble-connector",
+    "description": "SeAT 5 Mumble Integration - Sync users and roles to Mumble server",
+    "keywords": [
+        "seat",
+        "eve",
+        "mumble",
+        "voice",
+        "connector"
+    ],
+    "license": "GPL-2.0",
+    "authors": [
+        {
+            "name": "SeAT Mumble Connector",
+            "email": "noreply@example.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "laravel/framework": "^10.0",
+        "eveseat/web": "^5.0",
+        "eveseat/services": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Seat\\MumbleConnector\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Seat\\MumbleConnector\\MumbleConnectorServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

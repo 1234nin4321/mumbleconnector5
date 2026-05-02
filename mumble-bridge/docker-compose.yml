@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  mumble-bridge:
+    build: .
+    container_name: mumble-bridge
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    volumes:
+      # Map the Mumble database from the host into the container
+      - /var/lib/mumble-server:/var/lib/mumble-server:rw
+    environment:
+      MUMBLE_DB: /var/lib/mumble-server/mumble-server.sqlite
+      BRIDGE_PORT: "8082"
+      MUMBLE_SERVER_ID: "1"
+      # API_KEY: "your-optional-predefined-key"
