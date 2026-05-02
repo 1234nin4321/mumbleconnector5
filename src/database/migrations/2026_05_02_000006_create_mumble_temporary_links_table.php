@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mumble_temporary_links', function (Blueprint $table) {
-            $table->id();
-            $table->string('token')->unique();
-            $table->string('display_name');
-            $table->string('mumble_username');
-            $table->string('password');
-            $table->integer('mumble_user_id')->nullable();
-            $table->timestamp('expires_at');
-            $table->foreignId('created_by')->constrained('users');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('mumble_temporary_links')) {
+            Schema::create('mumble_temporary_links', function (Blueprint $table) {
+                $table->id();
+                $table->string('token')->unique();
+                $table->string('display_name');
+                $table->string('mumble_username');
+                $table->string('password');
+                $table->integer('mumble_user_id')->nullable();
+                $table->timestamp('expires_at');
+                $table->foreignId('created_by')->constrained('users');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

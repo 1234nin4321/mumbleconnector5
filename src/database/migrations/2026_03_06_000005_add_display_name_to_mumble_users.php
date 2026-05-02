@@ -8,11 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('mumble_users', function (Blueprint $table) {
-            // Stores the formatted Mumble display name (with ticker/tags)
-            // mumble_username stays as the stable character name
-            $table->string('mumble_display_name')->nullable()->after('mumble_username');
-        });
+        if (Schema::hasTable('mumble_users') && !Schema::hasColumn('mumble_users', 'mumble_display_name')) {
+            Schema::table('mumble_users', function (Blueprint $table) {
+                // Stores the formatted Mumble display name (with ticker/tags)
+                // mumble_username stays as the stable character name
+                $table->string('mumble_display_name')->nullable()->after('mumble_username');
+            });
+        }
     }
 
     public function down(): void
