@@ -145,9 +145,9 @@ class MumbleService
                 return false;
             }
 
-            // Stable character name — never changes
+            // Stable character name — used for internal SeAT tracking
             $username    = $this->generateUsername($user);
-            // Formatted display name — ticker, tags etc. — sent to Mumble server
+            // Formatted name (with ticker/tags) — this is what Mumble uses for Login/Display
             $displayName = $this->generateDisplayName($user);
             $groups      = $this->calculateUserGroups($user);
 
@@ -155,8 +155,8 @@ class MumbleService
 
             // Update local record
             $fillData = [
-                'mumble_username'     => $username,     // character name, stable
-                'mumble_display_name' => $displayName,  // formatted, pushed to Mumble
+                'mumble_username'     => $username,     // Internal stable ID (e.g. 1234nin4321)
+                'mumble_display_name' => $displayName,  // Mumble server name (e.g. [TRD] 1234nin4321)
                 'groups'              => $groups,
                 'is_active'           => true,
             ];

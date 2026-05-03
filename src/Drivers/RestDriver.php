@@ -139,7 +139,10 @@ class RestDriver implements MumbleDriverInterface
             // Fall back to mumble_username if display name not set yet
             $mumbleName = $user->mumble_display_name ?: $user->mumble_username;
 
-            $userData = ['name' => $mumbleName];
+            $userData = [
+                'name'         => $user->mumble_username,
+                'display_name' => $user->mumble_display_name,
+            ];
 
             if ($user->password_hash) {
                 $userData['password'] = $user->password_hash;
