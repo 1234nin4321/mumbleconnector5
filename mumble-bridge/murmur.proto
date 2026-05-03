@@ -5,21 +5,14 @@ package murmur;
 service V1 {
     // Authenticator Service
     rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
-    rpc GetRegistration(GetRegistrationRequest) returns (GetRegistrationResponse);
-    rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
-    rpc UnregisterUser(UnregisterUserRequest) returns (UnregisterUserResponse);
-    rpc GetRegisteredUsers(GetRegisteredUsersRequest) returns (GetRegisteredUsersResponse);
-    rpc SetRegistration(SetRegistrationRequest) returns (SetRegistrationResponse);
-    rpc GetGroups(GetGroupsRequest) returns (GetGroupsResponse);
-    rpc SetGroups(SetGroupsRequest) returns (SetGroupsResponse);
+    
+    // Server Control (The Handshake)
+    rpc AuthenticatorRegister(AuthenticatorRegisterRequest) returns (AuthenticatorRegisterResponse);
 }
 
 message AuthenticateRequest {
     string name = 1;
     string pw = 2;
-    repeated string certificates = 3;
-    string certhash = 4;
-    bool certstrong = 5;
 }
 
 message AuthenticateResponse {
@@ -29,58 +22,9 @@ message AuthenticateResponse {
     repeated string groups = 4;
 }
 
-message GetRegistrationRequest {
-    int32 id = 1;
+message AuthenticatorRegisterRequest {
+    string address = 1; // Our Bridge address (e.g. host.docker.internal:50052)
 }
 
-message GetRegistrationResponse {
-    int32 id = 1;
-    string name = 2;
-}
-
-message RegisterUserRequest {
-    string name = 1;
-}
-
-message RegisterUserResponse {
-    int32 id = 1;
-}
-
-message UnregisterUserRequest {
-    int32 id = 1;
-}
-
-message UnregisterUserResponse {
-}
-
-message GetRegisteredUsersRequest {
-    string filter = 1;
-}
-
-message GetRegisteredUsersResponse {
-    map<int32, string> users = 1;
-}
-
-message SetRegistrationRequest {
-    int32 id = 1;
-    string name = 2;
-}
-
-message SetRegistrationResponse {
-}
-
-message GetGroupsRequest {
-    int32 id = 1;
-}
-
-message GetGroupsResponse {
-    repeated string groups = 1;
-}
-
-message SetGroupsRequest {
-    int32 id = 1;
-    repeated string groups = 2;
-}
-
-message SetGroupsResponse {
+message AuthenticatorRegisterResponse {
 }
