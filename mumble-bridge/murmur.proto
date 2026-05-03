@@ -23,7 +23,7 @@ message AuthenticateResponse {
 }
 
 message AuthenticatorRegisterRequest {
-    string address = 1; // Our Bridge address (e.g. host.docker.internal:50052)
+    string address = 1; 
 }
 
 message AuthenticatorRegisterResponse {

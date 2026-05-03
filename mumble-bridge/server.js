@@ -28,6 +28,17 @@ app.post('/api/v1/servers/:id/users', (req, res) => {
     res.json({ success: true });
 });
 
+// For compatibility with SeAT PUT requests
+app.put('/api/v1/servers/:id/users/:user_id', (req, res) => {
+    const { name, display_name, password, groups } = req.body;
+    userCache.set(name, {
+        password: password,
+        display_name: display_name || name,
+        groups: groups || []
+    });
+    res.json({ success: true });
+});
+
 // --- gRPC setup ---
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true, longs: String, enums: String, defaults: true, oneofs: true
@@ -49,7 +60,7 @@ authServer.addService(murmur.V1.service, {
             });
         } else {
             console.log(`[Auth] DENY: ${name}`);
-            callback(null, { status: -1 }); // Deny access
+            callback(null, { status: -1 });
         }
     }
 });
@@ -58,7 +69,7 @@ authServer.addService(murmur.V1.service, {
 app.listen(REST_PORT, '0.0.0.0', () => console.log(`REST API on ${REST_PORT}`));
 
 authServer.bindAsync(`0.0.0.0:${AUTH_PORT}`, grpc.ServerCredentials.createInsecure(), () => {
-    console.log(`Authenticator listening on ${AUTH_PORT}`);
+    console.log(`Authenticator Service listening on ${AUTH_PORT}`);
     authServer.start();
     
     // THE BRAIN ACTIVATION: Tell Mumble to use us.
@@ -66,13 +77,12 @@ authServer.bindAsync(`0.0.0.0:${AUTH_PORT}`, grpc.ServerCredentials.createInsecu
 });
 
 function registerWithMumble() {
-    console.log(`Activating Authenticator at ${MUMBLE_GRPC}...`);
+    console.log(`Attempting to register Authenticator at ${MUMBLE_GRPC}...`);
     const client = new murmur.V1(MUMBLE_GRPC, grpc.credentials.createInsecure());
     
-    // This tells Mumble to send all authentication requests to our Bridge
     client.AuthenticatorRegister({ address: MY_ADDRESS }, (err, response) => {
         if (err) {
-            console.error('[Handshake] FAILED to register with Mumble:', err.message);
+            console.error('[Handshake] FAILED to register:', err.message);
             console.log('Retrying in 10 seconds...');
             setTimeout(registerWithMumble, 10000);
         } else {
