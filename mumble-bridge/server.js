@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const initSqlJs = require('sql.js');
 const crypto = require('crypto');
-const Ice = require('ice').Ice;
+const Ice = require('@zeroc/ice').Ice;
 const Murmur = require('./murmur.js').Murmur; // We will generate this or use dynamic loading
 
 const app = express();
