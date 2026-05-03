@@ -25,7 +25,8 @@
                     <thead>
                         <tr>
                             <th>SeAT User</th>
-                            <th>Mumble Username</th>
+                            <th>Login Username</th>
+                            <th>Display Name</th>
                             <th>Groups</th>
                             <th>Last Sync</th>
                             <th>Status</th>
@@ -42,6 +43,7 @@
                                 {{ $mumbleUser->seatUser->name ?? 'Unknown' }}
                             </td>
                             <td><code>{{ $mumbleUser->mumble_username }}</code></td>
+                            <td><span class="text-primary">{{ $mumbleUser->mumble_display_name }}</span></td>
                             <td>
                                 @forelse($mumbleUser->groups ?? [] as $group)
                                     @php

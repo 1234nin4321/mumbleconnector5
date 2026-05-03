@@ -28,10 +28,11 @@
 @endif
 
 @php
-    // The username registered on the Mumble server is the formatted display name
-    $mumbleName = $mumbleUser->mumble_display_name ?: $mumbleUser->mumble_username;
+    // The username for login is the formatted display name (to ensure tickers show up)
+    // but the stable identity is the mumble_username.
+    $mumbleLogin = $mumbleUser->mumble_display_name ?: $mumbleUser->mumble_username;
     // Build the mumble:// URL with credentials
-    $mumbleUrl = 'mumble://' . rawurlencode($mumbleName ?? '') . ':' . rawurlencode($mumbleUser->password_hash ?? '') . '@' . $server_address . ':' . $server_port . '/';
+    $mumbleUrl = 'mumble://' . rawurlencode($mumbleLogin ?? '') . ':' . rawurlencode($mumbleUser->password_hash ?? '') . '@' . $server_address . ':' . $server_port . '/';
 @endphp
 
 @if($syncFailed ?? false)
@@ -78,16 +79,16 @@
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-sm-4">Character</dt>
-                    <dd class="col-sm-8">
-                        <strong>{{ $mumbleUser->seatUser->main_character->name ?? $mumbleUser->mumble_username }}</strong>
-                        <small class="text-muted ml-1">(your stable identity — never changes)</small>
-                    </dd>
-
-                    <dt class="col-sm-4">Mumble Display</dt>
+                    <dt class="col-sm-4">Login Username</dt>
                     <dd class="col-sm-8">
                         <code class="h6">{{ $mumbleUser->mumble_display_name ?: $mumbleUser->mumble_username }}</code>
-                        <small class="text-muted d-block">This is how you appear in Mumble. Updates when corp/tags change.</small>
+                        <small class="text-muted d-block">Use this if connecting manually. Includes your alliance ticker.</small>
+                    </dd>
+
+                    <dt class="col-sm-4">Character Name</dt>
+                    <dd class="col-sm-8">
+                        <strong>{{ $mumbleUser->seatUser->main_character->name ?? $mumbleUser->mumble_username }}</strong>
+                        <small class="text-muted ml-1">(your stable SeAT identity)</small>
                     </dd>
 
                     <dt class="col-sm-4">Password</dt>
