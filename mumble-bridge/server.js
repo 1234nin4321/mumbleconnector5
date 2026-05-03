@@ -1,92 +1,67 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const initSqlJs = require('sql.js');
 const crypto = require('crypto');
-const grpc = require('@grpc/grpc-js');
-const protoLoader = require('@grpc/proto-loader');
 
 const app = express();
 app.use(express.json());
 
-const REST_PORT = process.env.BRIDGE_PORT || 8082;
-const AUTH_PORT = 50052; 
-const MY_ADDRESS = process.env.MY_ADDRESS || 'host.docker.internal:50052';
-const MUMBLE_GRPC = process.env.MUMBLE_GRPC || 'host.docker.internal:50051';
+const PORT = process.env.BRIDGE_PORT || 8082;
+const DB_PATH = process.env.MUMBLE_DB || '/var/lib/mumble-server/mumble-server.sqlite';
+const KEY_FILE = path.join(__dirname, 'mumble-bridge.key');
 
-const PROTO_PATH = path.join(__dirname, 'murmur.proto');
-const userCache = new Map();
+let API_KEY = process.env.MUMBLE_REST_KEY;
+if (!API_KEY) {
+    if (fs.existsSync(KEY_FILE)) {
+        API_KEY = fs.readFileSync(KEY_FILE, 'utf8').trim();
+    } else {
+        API_KEY = crypto.randomBytes(32).toString('hex');
+        fs.writeFileSync(KEY_FILE, API_KEY, { mode: 0o600 });
+    }
+}
 
-// --- REST API for SeAT ---
-app.post('/api/v1/servers/:id/users', (req, res) => {
-    const { name, display_name, password, groups } = req.body;
-    userCache.set(name, {
-        password: password,
-        display_name: display_name || name,
-        groups: groups || []
-    });
-    console.log(`[Sync] Updated: ${name} -> ${display_name}`);
-    res.json({ success: true });
-});
+const auth = (req, res, next) => {
+    const key = req.header('X-API-Key');
+    if (!key || key !== API_KEY) return res.status(401).json({ error: 'Unauthorized' });
+    next();
+};
 
-// For compatibility with SeAT PUT requests
-app.put('/api/v1/servers/:id/users/:user_id', (req, res) => {
-    const { name, display_name, password, groups } = req.body;
-    userCache.set(name, {
-        password: password,
-        display_name: display_name || name,
-        groups: groups || []
-    });
-    res.json({ success: true });
-});
+app.get('/api/v1/health', (req, res) => res.json({ status: 'ok', database: fs.existsSync(DB_PATH) }));
 
-// --- gRPC setup ---
-const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
-    keepCase: true, longs: String, enums: String, defaults: true, oneofs: true
-});
-const murmur = grpc.loadPackageDefinition(packageDefinition).murmur;
+app.post('/api/v1/servers/:id/users', auth, async (req, res) => {
+    const { name, display_name, password } = req.body;
+    const mumbleName = display_name || name;
+    
+    try {
+        const SQL = await initSqlJs();
+        const filebuffer = fs.readFileSync(DB_PATH);
+        const db = new SQL.Database(filebuffer);
 
-const authServer = new grpc.Server();
-authServer.addService(murmur.V1.service, {
-    authenticate: (call, callback) => {
-        const { name, pw } = call.request;
-        const user = userCache.get(name);
-        if (user && user.password === pw) {
-            console.log(`[Auth] ALLOW: ${name} as "${user.display_name}"`);
-            callback(null, {
-                status: 0,
-                id: 1000 + (Math.abs(name.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)) % 10000),
-                name: user.display_name,
-                groups: user.groups
-            });
+        // Check if user exists
+        const resUser = db.exec("SELECT user_id FROM users WHERE name = ?", [mumbleName]);
+        
+        if (resUser.length > 0) {
+            // Update
+            db.run("UPDATE users SET pw = ? WHERE name = ?", [password, mumbleName]);
         } else {
-            console.log(`[Auth] DENY: ${name}`);
-            callback(null, { status: -1 });
+            // Insert
+            db.run("INSERT INTO users (server_id, name, pw, lastactive) VALUES (1, ?, ?, datetime('now'))", [mumbleName, password]);
         }
+
+        const data = db.export();
+        fs.writeFileSync(DB_PATH, Buffer.from(data));
+        db.close();
+
+        console.log(`[Sync] Updated Mumble user: ${mumbleName}`);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
     }
 });
 
-// Start servers
-app.listen(REST_PORT, '0.0.0.0', () => console.log(`REST API on ${REST_PORT}`));
-
-authServer.bindAsync(`0.0.0.0:${AUTH_PORT}`, grpc.ServerCredentials.createInsecure(), () => {
-    console.log(`Authenticator Service listening on ${AUTH_PORT}`);
-    authServer.start();
-    
-    // THE BRAIN ACTIVATION: Tell Mumble to use us.
-    setTimeout(registerWithMumble, 5000);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Mumble SQLite bridge listening on port ${PORT}`);
+    console.log(`Database: ${DB_PATH}`);
 });
-
-function registerWithMumble() {
-    console.log(`Attempting to register Authenticator at ${MUMBLE_GRPC}...`);
-    const client = new murmur.V1(MUMBLE_GRPC, grpc.credentials.createInsecure());
-    
-    client.AuthenticatorRegister({ address: MY_ADDRESS }, (err, response) => {
-        if (err) {
-            console.error('[Handshake] FAILED to register:', err.message);
-            console.log('Retrying in 10 seconds...');
-            setTimeout(registerWithMumble, 10000);
-        } else {
-            console.log('[Handshake] SUCCESS! The Bridge is now controlling Mumble access.');
-        }
-    });
-}
