@@ -73,6 +73,9 @@ class MumbleAdminController extends Controller
                 'api_key' => $getSetting('mumble.rest_api_key', $config['rest']['api_key']),
             ],
             
+            'username_format' => $getSetting('mumble.username_format', 'main_character'),
+            'require_mapping' => (bool) $getSetting('mumble.require_mapping', '0'),
+
             'permissions' => [
                 'sync_corporations' => (bool) $getSetting('mumble.sync_corporations', '1'),
                 'sync_alliances'    => (bool) $getSetting('mumble.sync_alliances', '1'),

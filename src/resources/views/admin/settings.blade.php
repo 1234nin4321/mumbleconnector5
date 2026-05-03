@@ -137,19 +137,19 @@
 
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" name="sync_enabled" id="sync_enabled" value="1"
-                            {{ setting('mumble.sync_enabled', true) ? 'checked' : '' }}>
+                            {{ $config['sync_enabled'] ? 'checked' : '' }}>
                         <label class="form-check-label" for="sync_enabled">Enable Automatic Sync</label>
                     </div>
 
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" name="auto_remove" id="auto_remove" value="1"
-                            {{ setting('mumble.auto_remove', true) ? 'checked' : '' }}>
+                            {{ $config['auto_remove'] ? 'checked' : '' }}>
                         <label class="form-check-label" for="auto_remove">Auto-remove inactive SeAT users</label>
                     </div>
 
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" name="require_mapping" id="require_mapping" value="1"
-                            {{ setting('mumble.require_mapping', false) ? 'checked' : '' }}>
+                            {{ $config['require_mapping'] ? 'checked' : '' }}>
                         <label class="form-check-label" for="require_mapping">Require Mumble Group Mapping</label>
                         <small class="form-text text-muted">If checked, a user MUST match at least one Active Mumble Group Mapping. If they leave the corps/alliances in your mappings, their Mumble account is instantly deleted.</small>
                     </div>
